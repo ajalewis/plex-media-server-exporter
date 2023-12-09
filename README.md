@@ -32,6 +32,8 @@ docker run \
 
 ### Helm Chart
 
+See Helm install [folder](https://github.com/ajalewis/plex-media-server-exporter/tree/main/charts/plex-media-server-exporter)
+
 ### Environment Variables
 
 The Plex Media Exporter uses the below environmental variables:
