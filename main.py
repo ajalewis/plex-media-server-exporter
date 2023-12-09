@@ -61,7 +61,7 @@ if __name__ == "__main__":
     while True:
         try:
             exporter = PlexExporter(token, server, port)
-            exporter.runCollector()
+            exporter.run_collector()
             break
         except requests.exceptions.ConnectionError:
             logging.error("connection error. re-trying...")
