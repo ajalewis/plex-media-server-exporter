@@ -66,5 +66,6 @@ Below is an example scrape job
         - targets: ['<IPADDRESS/HOSTNAME>:9922']
   ```
 ## Grafana
+Example Grafana dashboard
 
 ![grafana-example](grafana/grafana-example.png)
