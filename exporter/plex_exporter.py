@@ -40,17 +40,17 @@ class PlexExporter:
             logging.error(e)
             exit(1)
 
-    def runCollector(self):
+    def run_collector(self):
         start_http_server(port=int(self.port))
         logging.info(f"serving metrics on port: {self.port}")
 
         while True:
-            self.collector.collectUsers()
-            self.collector.collectBase()
-            self.collector.collectLibrary()
-            self.collector.collectClients()
-            self.collector.collectHistory()
-            self.collector.collectQualities()
+            self.collector.collect_users()
+            self.collector.collect_base()
+            self.collector.collect_libraries
+            self.collector.collect_clients()
+            self.collector.collect_history()
+            self.collector.collect_qualities()
             time.sleep(1)
 
 
@@ -96,7 +96,7 @@ class PlexCollector:
             labelnames=["quality"],
         )
 
-    def collectUsers(self):
+    def collect_users(self):
         self.plex_user_metric.clear()
 
         try:
@@ -109,7 +109,7 @@ class PlexCollector:
         except Exception as e:
             logging.error(e)
 
-    def collectBase(self):
+    def collect_base(self):
         self.plex_base_metric.info(
             {
                 "version": f"{self.plex.version}",
@@ -119,7 +119,7 @@ class PlexCollector:
             }
         )
 
-    def collectHistory(self):
+    def collect_history(self):
         users = self.plex.systemAccounts()
         history = self.plex.history()
 
@@ -139,7 +139,7 @@ class PlexCollector:
             user_id, user_name = key.split(":")
             self.plex_watch_history_metric.labels(id=user_id, user=user_name).set(count)
 
-    def collectClients(self):
+    def collect_clients(self):
         sessions = self.plex.sessions()
         self.plex_session_metric.clear()
 
@@ -170,7 +170,7 @@ class PlexCollector:
 
                 unique_clients.add(client.machineIdentifier)
 
-    def collectQualities(self):
+    def collect_qualities(self):
         self.plex_movie_quality.clear()
         self.plex_show_quality.clear()
 
@@ -203,7 +203,7 @@ class PlexCollector:
         for quality, count in shows.items():
             self.plex_show_quality.labels(quality).set(count)
 
-    def collectLibrary(self):
+    def collect_libraries(self):
         libraries = self.plex.library.sections()
 
         for section in libraries:
