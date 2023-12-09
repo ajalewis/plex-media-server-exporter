@@ -38,8 +38,8 @@ The Plex Media Exporter uses the below environmental variables:
 
 | Environment variable       | Default       | Description |
 | -------------------------- | ------------- | ----------- |
-| `PLEXAPI_AUTH_SERVER_BASEURL`         |  http://localhost:32400             | Plex Media Server hostname |
-| `PLEXAPI_AUTH_SERVER_TOKEN`         |              | Plex Media Server token |
+| `PLEX_SERVER`         |  http://localhost:32400             | Plex Media Server hostname |
+| `PLEX_TOKEN`         |              | Plex Media Server token |
 | `METRICS_PORT`         |   9922            | Prometheus metrics port |
 
 
