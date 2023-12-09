@@ -4,11 +4,6 @@ Plex-media-server-exporter
 
 A Helm chart for plex-media-server-exporter
 
-## Quick Start
-
-```
-helm install plex-media-server-exporter -f values .
-
 ## Configuration
 
 The following table lists the configurable parameters of the plex-media-server-exporter chart and their default values.
