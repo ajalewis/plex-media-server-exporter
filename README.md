@@ -24,8 +24,8 @@ options:
 ```
 docker run \
     -e PORT=9922 \
-    -e PLEXAPI_AUTH_SERVER_BASEURL=http://localhost:32400 \
-    -e PLEXAPI_AUTH_SERVER_TOKEN=<PLEX_TOKEN> \
+    -e PLEX_SERVER=http://localhost:32400 \
+    -e PLEX_TOKEN=<PLEX_TOKEN> \
     -p 9922:9922 \
     quay.io/alexanderlewis/plex-media-exporter:latest
 ```
