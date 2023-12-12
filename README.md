@@ -53,6 +53,7 @@ The Plex Media Exporter uses the below environmental variables:
 | `plex_info`                                    | info    | Base information about the plex media server host. |
 | `plex_users`                                         | gauge    | Plex Media Server users associated with the relevant server.  |
 | `plex_clients_total`                                        | gauge    | Plex Media Server clients.  |
+| `plex_genres_total`                                         | gauge    | Plex Media Serve total genres for all Movies & TV Shows. |
 | `plex_library_size_total`                                         | gauge    | Plex Media Server library sizes in bytes. |
 | `plex_library_items_total`                                      | gauge  | Plex Media Server library items count per section. |
 | `plex_sessions_total`                                      | gauge  | Plex Media Server current user sessions. |
