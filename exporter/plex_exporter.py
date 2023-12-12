@@ -34,7 +34,7 @@ class PlexExporter:
             logging.error("Plex token is not valid")
             exit(1)
         except ConnectionError:
-            logging.error(f"PMS '{server}' is unreachable")
+            logging.error(f"Plex Media Server '{server}' is unreachable")
             exit(1)
         except Exception as e:
             logging.error(e)
@@ -47,9 +47,10 @@ class PlexExporter:
         while True:
             self.collector.collect_users()
             self.collector.collect_base()
-            self.collector.collect_libraries
+            self.collector.collect_libraries()
             self.collector.collect_clients()
             self.collector.collect_history()
+            self.collector.collect_genres()
             self.collector.collect_qualities()
             time.sleep(1)
 
@@ -80,10 +81,22 @@ class PlexCollector:
             "Total items in a library",
             labelnames=["name", "server", "type"],
         )
+        self.plex_genres_metric = Gauge(
+            "plex_genres_total",
+            "Total genres for all media items",
+            labelnames=["genre", "server"],
+        )
         self.plex_session_metric = Gauge(
             "plex_sessions_total",
             "Total number of current sessions",
-            labelnames=["session_id", "username", "title", "player", "state"],
+            labelnames=[
+                "session_id",
+                "username",
+                "title",
+                "player",
+                "state",
+                "location",
+            ],
         )
         self.plex_movie_quality = Gauge(
             "plex_movie_quality_total",
@@ -147,7 +160,7 @@ class PlexCollector:
 
         for session in sessions:
             if session.librarySectionTitle == "TV Shows":
-                title = session.grandparentTitle
+                title = f"{session.grandparentTitle} - {session.title}"
             else:
                 title = session.title
 
@@ -158,9 +171,10 @@ class PlexCollector:
             self.plex_session_metric.labels(
                 session_key,
                 username,
-                str(f"{title} ({session.year})"),
-                session.players[0].platform,
-                session.players[0].state,
+                title,
+                session.player.product,
+                session.player.state,
+                session.sessions[0].location,
             ).set(1.0)
 
             if client.machineIdentifier not in unique_clients:
@@ -203,12 +217,28 @@ class PlexCollector:
         for quality, count in shows.items():
             self.plex_show_quality.labels(quality).set(count)
 
+    def collect_genres(self):
+        libraries = self.plex.library.sections()
+
+        genres_lists = []
+        for section in libraries:
+            if section.TYPE == "show" or "movie":
+                media = section.all()
+                for media in media:
+                    for genre in media.genres:
+                        genres_lists.append(genre.tag)
+        genre_count = Counter(genres_lists)
+        genres = dict(genre_count)
+
+        for genre, count in genres.items():
+            self.plex_genres_metric.labels(genre, self.plex.friendlyName).set(count)
+
     def collect_libraries(self):
         libraries = self.plex.library.sections()
 
         for section in libraries:
             if section.TYPE == "show":
-                totalSize = len(section.searchEpisodes())
+                episodes_total_size = len(section.searchEpisodes())
 
                 self.plex_library_size_metric.labels(
                     section.title, self.plex.friendlyName, section.type
@@ -216,7 +246,11 @@ class PlexCollector:
 
                 self.plex_library_items_metric.labels(
                     section.title, self.plex.friendlyName, section.type
-                ).set(totalSize)
+                ).set(section.totalSize)
+
+                self.plex_library_items_metric.labels(
+                    "Episodes", self.plex.friendlyName, section.type
+                ).set(episodes_total_size)
 
             else:
                 self.plex_library_size_metric.labels(
