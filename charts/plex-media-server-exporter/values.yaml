@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: quay.io/alexanderlewis/plex-media-server-exporter
+  repository: ajalewis/plex-media-server-exporter
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
