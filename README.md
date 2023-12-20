@@ -2,6 +2,13 @@
 
 ## Usage
 
+### Architectures
+
+| Architecture   | Supported?       
+| -------------  | ------------- 
+| **x86-64**     |       ✅      
+| **arm64**      |       ✅ 
+
 ### CLI
 
 ```
@@ -16,7 +23,7 @@ options:
   -s SERVER, --server SERVER
                         Plex server baseurl (default: http://localhost:32400)
   -p PORT, --port PORT  Metrics server port (default: 9922)
-  -v, --version         show program's version number and exit
+  -v, --version         Show program's version number and exit
 ```
 
 ### Docker
@@ -27,7 +34,7 @@ docker run \
     -e PLEX_SERVER=http://localhost:32400 \
     -e PLEX_TOKEN=<PLEX_TOKEN> \
     -p 9922:9922 \
-    quay.io/alexanderlewis/plex-media-exporter:latest
+    ajalewis/plex-media-server-exporter:latest
 ```
 
 ### Helm Chart
@@ -48,18 +55,18 @@ The Plex Media Exporter uses the below environmental variables:
 ## Metrics
 
 
-| Metric name                                         | Type     | Description      |
-| --------------------------------------------------- | -------- | ---------------- |
-| `plex_info`                                    | info    | Base information about the plex media server host. |
-| `plex_users`                                         | gauge    | Plex Media Server users associated with the relevant server.  |
-| `plex_clients_total`                                        | gauge    | Plex Media Server clients.  |
-| `plex_genres_total`                                         | gauge    | Plex Media Serve total genres for all Movies & TV Shows. |
-| `plex_library_size_total`                                         | gauge    | Plex Media Server library sizes in bytes. |
-| `plex_library_items_total`                                      | gauge  | Plex Media Server library items count per section. |
-| `plex_sessions_total`                                      | gauge  | Plex Media Server current user sessions. |
-| `plex_movie_quality_total`                                      | gauge  | Plex Media Server total number of Movies by quality. |
-| `plex_show_quality_total`                                      | gauge  | Plex Media Server total number of TV Shows by quality |
-| `plex_watch_history_total`                                    | gauge | Plex Media Server watch history per user |
+| Metric name                 | Type     | Description                                                 | 
+| ----------------------------| -------- | ----------------------------------------------------------- |
+| `plex_info`                 | info   | Base information about the plex media server host.            |
+| `plex_users`                | gauge  | Plex Media Server users associated with the relevant server.  |
+| `plex_clients_total`        | gauge  | Plex Media Server clients.                                    |
+| `plex_genres_total`         | gauge  | Plex Media Serve total genres for all Movies & TV Shows.      |
+| `plex_library_size_total`   | gauge  | Plex Media Server library sizes in bytes.                     |
+| `plex_library_items_total`  | gauge  | Plex Media Server library items count per section.            |
+| `plex_sessions_total`       | gauge  | Plex Media Server current user sessions.                      |
+| `plex_movie_quality_total`  | gauge  | Plex Media Server total number of Movies by quality.          |
+| `plex_show_quality_total`   | gauge  | Plex Media Server total number of TV Shows by quality         |
+| `plex_watch_history_total`  | gauge  | Plex Media Server watch history per user                      |
 
 Below is an example scrape job
 
