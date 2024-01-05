@@ -11,7 +11,7 @@ The following table lists the configurable parameters of the plex-media-server-e
 | Parameter                | Description             | Default        |
 | ------------------------ | ----------------------- | -------------- |
 | `replicaCount` |  | `1` |
-| `image.repository` |  | `"quay.io/alexanderlewis/plex-media-server-exporter"` |
+| `image.repository` |  | `"ajalewis/plex-media-server-exporter"` |
 | `image.pullPolicy` |  | `"IfNotPresent"` |
 | `image.tag` |  | `"latest"` |
 | `imagePullSecrets` |  | `[]` |
