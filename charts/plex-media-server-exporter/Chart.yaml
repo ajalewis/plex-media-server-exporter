@@ -2,8 +2,8 @@ apiVersion: v2
 name: plex-media-server-exporter
 description: A Helm chart for plex-media-server-exporter
 type: application
-version: 0.1.0
-appVersion: "1.0.0"
+version: 0.2.0
+appVersion: "1.1.0"
 sources:
   - https://github.com/ajalewis/plex-media-server-exporter
 maintainers:
