@@ -27,15 +27,18 @@ class PlexExporter:
         self.token = token
         self.server = server
         self.port = port
+        self._initialize()
+        
+    def _initialize(self):
         try:
-            self.plex = PlexServer(baseurl=server, token=token, timeout=5)
+            self.plex = PlexServer(baseurl=self.server, token=self.token, timeout=5)
             self.collector = PlexCollector(self.token, self.server)
-            logging.info(f"successfully connected to {self.plex.friendlyName}")
+            logging.info(f"Successfully connected to {self.plex.friendlyName}")
         except Unauthorized:
             logging.error("Plex token is not valid")
             exit(1)
         except ConnectionError:
-            logging.error(f"Plex Media Server '{server}' is unreachable")
+            logging.error(f"Plex Media Server '{self.server}' is unreachable")
             exit(1)
         except Exception as e:
             logging.error(e)
@@ -46,11 +49,11 @@ class PlexExporter:
         logging.info(f"serving metrics on port: {self.port}")
 
         while True:
-            self.collector.collect_base()
-            self.collector.collect_libraries_genres()
-            self.collector.collect_clients()
-            self.collector.collect_history()
-            self.collector.collect_qualities()
+            self.collector._collect_base()
+            self.collector._collect_libraries_genres()
+            self.collector._collect_clients()
+            self.collector._collect_history()
+            self.collector._collect_qualities()
             time.sleep(15)
 
 
@@ -94,18 +97,13 @@ class PlexCollector:
                 "location",
             ],
         )
-        self.plex_movie_quality = Gauge(
-            "plex_movie_quality_total",
-            "Total number of Movies by quality",
-            labelnames=["quality"],
-        )
-        self.plex_show_quality = Gauge(
-            "plex_show_quality_total",
-            "Total number of TV Shows by quality",
-            labelnames=["quality"],
+        self.plex_media_quality = Gauge(
+            "plex_media_quality_total",
+            "Total number of media by quality",
+            labelnames=["type", "quality"],
         )
 
-    def collect_base(self):
+    def _collect_base(self):
         self.plex_base_metric.info(
             {
                 "version": f"{self.plex.version}",
@@ -115,7 +113,7 @@ class PlexCollector:
             }
         )
 
-    def collect_history(self):
+    def _collect_history(self):
         users = self.plex.systemAccounts()
         history = self.plex.history()
         try:
@@ -137,10 +135,9 @@ class PlexCollector:
                     count
                 )
         except Exception as e:
-            logging.error(e)
-            exit(1)
+            logging.warning(f"Failed to scrape plex_watch_history_metric: {e}")
 
-    def collect_clients(self):
+    def _collect_clients(self):
         sessions = self.plex.sessions()
         self.plex_session_metric.clear()
 
@@ -173,47 +170,33 @@ class PlexCollector:
 
                     unique_clients.add(client.machineIdentifier)
         except Exception as e:
-            logging.error(e)
-            exit(1)
+            logging.warning(f"Failed to scrape plex_clients_metric: {e}")
 
-    def collect_qualities(self):
-        self.plex_movie_quality.clear()
-        self.plex_show_quality.clear()
+    def _collect_qualities(self):
+        self.plex_media_quality.clear()
 
+        payload = []
         try:
-            libraries = self.plex.library.sections()
-            movies = []
-            shows = []
-            for library in libraries:
-                if library.type in ["movie", "show"]:
-                    for item in library.all():
-                        if item.type == "show":
-                            for episode in item.episodes():
-                                if episode.media:
-                                    for media_part in episode.media:
-                                        video_resolution = media_part.videoResolution
-                                        shows.append(video_resolution)
-                        else:
-                            if item.media:
-                                for media_part in item.media:
-                                    video_resolution = media_part.videoResolution
-                                    video_resolution = media_part.videoResolution
-                                    movies.append(video_resolution)
+            for movie in self.plex.library.section("Movies").all():
+                media = movie.media[0] if movie.media else None
+                video_resolution = media.videoResolution if media else None
+                payload.append({"type": movie.TYPE, "resolution": video_resolution})
 
-            count_shows = Counter(shows)
-            count_movies = Counter(movies)
-            shows = dict(count_shows)
-            movies = dict(count_movies)
+            for show in self.plex.library.section("TV Shows").all():
+                for episode in show.episodes():
+                    media = episode.media[0] if episode.media else None
+                    video_resolution = media.videoResolution if media.videoResolution else "unknown" # Deals with Media not having videoResolution
+                    payload.append(
+                        {"type": episode.TYPE, "resolution": video_resolution}
+                    )
 
-            for quality, count in movies.items():
-                self.plex_movie_quality.labels(quality).set(count)
-            for quality, count in shows.items():
-                self.plex_show_quality.labels(quality).set(count)
+            payload = Counter((item["type"], item["resolution"]) for item in payload)
+            for quality, count in payload.items():
+                self.plex_media_quality.labels(quality[0], quality[1]).set(count)
         except Exception as e:
-            logging.error(e)
-            exit(1)
+            logging.warning(f"Failed to scrape plex_media_quality_metric: {e}")
 
-    def collect_libraries_genres(self):
+    def _collect_libraries_genres(self):
         libraries = self.plex.library.sections()
 
         try:
@@ -255,5 +238,6 @@ class PlexCollector:
                         section.title, self.plex.friendlyName, section.type
                     ).set(section.totalSize)
         except Exception as e:
-            logging.error(e)
-            exit(1)
+            logging.warning(
+                f"Failed to scrape plex_library_items_metric, plex_library_size_metric: {e}"
+            )
