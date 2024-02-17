@@ -63,8 +63,7 @@ The Plex Media Exporter uses the below environmental variables:
 | `plex_library_size_total`   | gauge  | Plex Media Server library sizes in bytes.                     |
 | `plex_library_items_total`  | gauge  | Plex Media Server library items count per section.            |
 | `plex_sessions_total`       | gauge  | Plex Media Server current user sessions.                      |
-| `plex_movie_quality_total`  | gauge  | Plex Media Server total number of Movies by quality.          |
-| `plex_show_quality_total`   | gauge  | Plex Media Server total number of TV Shows by quality         |
+| `plex_media_quality_total`  | gauge  | Plex Media Server qualities by resolution.                    |
 | `plex_watch_history_total`  | gauge  | Plex Media Server watch history per user                      |
 
 Below is an example scrape job
