@@ -28,12 +28,12 @@ class PlexExporter:
         self.server = server
         self.port = port
         self._initialize()
-        
+
     def _initialize(self):
         try:
             self.plex = PlexServer(baseurl=self.server, token=self.token, timeout=5)
             self.collector = PlexCollector(self.token, self.server)
-            logging.info(f"Successfully connected to {self.plex.friendlyName}")
+            logging.info(f"connected to {self.plex.friendlyName}")
         except Unauthorized:
             logging.error("Plex token is not valid")
             exit(1)
@@ -100,7 +100,7 @@ class PlexCollector:
         self.plex_media_quality = Gauge(
             "plex_media_quality_total",
             "Total number of media by quality",
-            labelnames=["type", "quality"],
+            labelnames=["type", "quality", "server"],
         )
 
     def _collect_base(self):
@@ -145,7 +145,7 @@ class PlexCollector:
 
         try:
             for session in sessions:
-                if session.librarySectionTitle == "TV shows":
+                if type(session).__name__ == "EpisodeSession":
                     title = f"{session.grandparentTitle} - {session.title}"
                 else:
                     title = session.title
@@ -176,23 +176,40 @@ class PlexCollector:
         self.plex_media_quality.clear()
 
         payload = []
+        medias = self.plex.library.sections()
         try:
-            for movie in self.plex.library.section("Movies").all():
-                media = movie.media[0] if movie.media else None
-                video_resolution = media.videoResolution if media else None
-                payload.append({"type": movie.TYPE, "resolution": video_resolution})
+            for media in medias:
+                if media.TYPE == "movie":
+                    for movie in self.plex.library.sectionByID(media.key).all():
+                        media = movie.media[0] if movie.media else None
+                        video_resolution = (
+                            media.videoResolution
+                            if media.videoResolution
+                            else "undefined"
+                        )  # Deals with Media not having videoResolution
+                        payload.append(
+                            {"type": movie.TYPE, "resolution": video_resolution}
+                        )
+                else:
+                    for show in self.plex.library.sectionByID(media.key).all():
+                        for episode in show.episodes():
+                            media = episode.media[0] if episode.media else None
+                            video_resolution = (
+                                media.videoResolution
+                                if media.videoResolution
+                                else "undefined"
+                            )  # Deals with Media not having videoResolution
+                            payload.append(
+                                {"type": episode.TYPE, "resolution": video_resolution}
+                            )
 
-            for show in self.plex.library.section("TV Shows").all():
-                for episode in show.episodes():
-                    media = episode.media[0] if episode.media else None
-                    video_resolution = media.videoResolution if media.videoResolution else "unknown" # Deals with Media not having videoResolution
-                    payload.append(
-                        {"type": episode.TYPE, "resolution": video_resolution}
+                    payload = Counter(
+                        (item["type"], item["resolution"]) for item in payload
                     )
-
-            payload = Counter((item["type"], item["resolution"]) for item in payload)
-            for quality, count in payload.items():
-                self.plex_media_quality.labels(quality[0], quality[1]).set(count)
+                    for quality, count in payload.items():
+                        self.plex_media_quality.labels(
+                            quality[0], quality[1], self.plex.friendlyName
+                        ).set(count)
         except Exception as e:
             logging.warning(f"Failed to scrape plex_media_quality_metric: {e}")
 

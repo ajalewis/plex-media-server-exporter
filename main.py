@@ -10,7 +10,7 @@ from time import sleep
 from exporter.plex_exporter import PlexExporter
 from dotenv import load_dotenv
 
-__version__ = "v1.3.0"
+__version__ = "v1.4.0"
 
 logging.basicConfig(
     level="INFO",
