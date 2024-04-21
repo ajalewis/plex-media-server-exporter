@@ -1,4 +1,4 @@
-# Plex Media Server Promtheus Exporter
+# Plex Media Server Prometheus Exporter
 # by alexanderashworthhomelewis@gmail.com
 
 from exporter.exceptions import EnvInvalid
@@ -10,11 +10,9 @@ from time import sleep
 from exporter.plex_exporter import PlexExporter
 from dotenv import load_dotenv
 
-__version__ = "v1.4.0"
-
 logging.basicConfig(
     level="INFO",
-    format="[%(levelname)s] %(asctime)s: %(message)s",
+    format="[%(levelname)s] %(asctime)s %(message)s",
     datefmt="%d-%m-%Y %H:%M:%S",
 )
 
@@ -23,7 +21,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description="Plex Media Server Prometheus exporter",
-        prog="Plex Media Exporter",
+        prog="Plex Media Server Exporter",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("-t", "--token", help="Plex token")
@@ -34,7 +32,11 @@ if __name__ == "__main__":
         "-p", "--port", type=int, help="Metrics server port", default=9922
     )
     parser.add_argument(
-        "-v", "--version", action="version", version=f"%(prog)s {__version__}"
+        "-v",
+        "--version",
+        action="version",
+        help="Prints the current Plex Media Server Exporter version",
+        version=f"%(prog)s {PlexExporter.__version__}",
     )
     args = parser.parse_args()
 
