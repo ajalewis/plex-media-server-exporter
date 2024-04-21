@@ -10,7 +10,7 @@ import logging
 
 class PlexExporter:
     """
-    Collect specific PMS related metrics and retuns them as a Prometheus metric.
+    Collect specific PMS related metrics and returns them as a Prometheus metric.
 
     Parameters:
               server (str): Plex Media Server base URL (default http://localhost:32400).
@@ -23,6 +23,8 @@ class PlexExporter:
             token (str): The relevant Plex token.
     """
 
+    __version__ = "v1.5.0"
+
     def __init__(self, token, server, port):
         self.token = token
         self.server = server
@@ -33,15 +35,16 @@ class PlexExporter:
         try:
             self.plex = PlexServer(baseurl=self.server, token=self.token, timeout=5)
             self.collector = PlexCollector(self.token, self.server)
-            logging.info(f"connected to {self.plex.friendlyName}")
+            logging.info(f"** Plex Media Server Exporter {self.__version__} **")
+            logging.info(f"successfully connected to {self.plex.friendlyName}")
         except Unauthorized:
             logging.error("Plex token is not valid")
             exit(1)
         except ConnectionError:
-            logging.error(f"Plex Media Server '{self.server}' is unreachable")
+            logging.error(f"failed to initialise. PMS '{self.server}' is unreachable")
             exit(1)
         except Exception as e:
-            logging.error(e)
+            logging.error(f"failed to initialise PMS connection: {e}")
             exit(1)
 
     def run_collector(self):
@@ -52,7 +55,7 @@ class PlexExporter:
             self.collector._collect_base()
             self.collector._collect_libraries_genres()
             self.collector._collect_clients()
-            self.collector._collect_history()
+            self.collector._collect_total_played()
             self.collector._collect_qualities()
             time.sleep(15)
 
@@ -61,9 +64,7 @@ class PlexCollector:
     def __init__(self, token, server) -> None:
         super().__init__()
         self.plex = PlexServer(server, token)
-        self.plex_watch_history_metric = Gauge(
-            "plex_watch_history_total", "Total watch history", labelnames=["id", "user"]
-        )
+
         self.plex_client_metric = Gauge(
             "plex_clients_total",
             "Plex client information",
@@ -95,12 +96,18 @@ class PlexCollector:
                 "player",
                 "state",
                 "location",
+                "server",
             ],
         )
-        self.plex_media_quality = Gauge(
+        self.plex_media_quality_metric = Gauge(
             "plex_media_quality_total",
             "Total number of media by quality",
             labelnames=["type", "quality", "server"],
+        )
+        self.plex_total_played_duration_metric = Gauge(
+            "plex_total_played_duration",
+            "Total number of media played in milliseconds",
+            labelnames=["server", "user"],
         )
 
     def _collect_base(self):
@@ -112,30 +119,6 @@ class PlexCollector:
                 "plexpass_subscription": f"{self.plex.myPlexSubscription}",
             }
         )
-
-    def _collect_history(self):
-        users = self.plex.systemAccounts()
-        history = self.plex.history()
-        try:
-            user_list = {}
-            for user in users:
-                if user.name:
-                    user_list[user.id] = user.name
-
-            history_count = []
-            for item in history:
-                user_name = user_list.get(item.accountID, "unknown")
-                history_count.append(f"{item.accountID}:{user_name}")
-
-            final_count = Counter(history_count)
-
-            for key, count in final_count.items():
-                user_id, user_name = key.split(":")
-                self.plex_watch_history_metric.labels(id=user_id, user=user_name).set(
-                    count
-                )
-        except Exception as e:
-            logging.warning(f"Failed to scrape plex_watch_history_metric: {e}")
 
     def _collect_clients(self):
         sessions = self.plex.sessions()
@@ -161,6 +144,7 @@ class PlexCollector:
                     session.player.product,
                     session.player.state,
                     session.sessions[0].location,
+                    self.plex.friendlyName,
                 ).set(1.0)
 
                 if client.machineIdentifier not in unique_clients:
@@ -173,7 +157,7 @@ class PlexCollector:
             logging.warning(f"Failed to scrape plex_clients_metric: {e}")
 
     def _collect_qualities(self):
-        self.plex_media_quality.clear()
+        self.plex_media_quality_metric.clear()
 
         payload = []
         medias = self.plex.library.sections()
@@ -207,7 +191,7 @@ class PlexCollector:
                         (item["type"], item["resolution"]) for item in payload
                     )
                     for quality, count in payload.items():
-                        self.plex_media_quality.labels(
+                        self.plex_media_quality_metric.labels(
                             quality[0], quality[1], self.plex.friendlyName
                         ).set(count)
         except Exception as e:
@@ -258,3 +242,42 @@ class PlexCollector:
             logging.warning(
                 f"Failed to scrape plex_library_items_metric, plex_library_size_metric: {e}"
             )
+
+    def _collect_total_played(self):
+        users_dict = self._get_users()
+        total_playtime_by_user = {}
+        history = self.plex.history()
+
+        if history:
+            try:
+                keys = [history_item.key for history_item in history]
+                keys_filtered = [x.split("/")[-1] for x in keys]
+                search = "/library/metadata/" + ",".join(keys_filtered)
+                media_items = self.plex.fetchItems(search)
+
+                for history_item, media in zip(history, media_items):
+                    user_id = history_item.accountID
+                    username = users_dict.get(user_id)
+                    if username:
+                        total_playtime_by_user.setdefault(username, 0)
+                        total_playtime_by_user[username] += media.duration
+                    else:
+                        logging.warning(f"User with ID {user_id} not found.")
+
+                for user, duration in total_playtime_by_user.items():
+                    self.plex_total_played_duration_metric.labels(
+                        self.plex.friendlyName, user
+                    ).set(float(duration))
+
+            except Exception as e:
+                logging.warning(
+                    f"Failed to scrape plex_total_played_duration_metric: {e}"
+                )
+
+    def _get_users(self):
+        users = self.plex.systemAccounts()
+        user_list = {}
+        for user in users:
+            if user.name:
+                user_list[user.id] = user.name
+        return user_list

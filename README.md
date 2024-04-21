@@ -55,16 +55,16 @@ The Plex Media Exporter uses the below environmental variables:
 ## Metrics
 
 
-| Metric name                 | Type     | Description                                                 | 
-| ----------------------------| -------- | ----------------------------------------------------------- |
-| `plex_info`                 | info   | Base information about the plex media server host.            |
-| `plex_clients_total`        | gauge  | Plex Media Server clients.                                    |
-| `plex_genres_total`         | gauge  | Plex Media Server total genres for all Movies & TV Shows.      |
-| `plex_library_size_total`   | gauge  | Plex Media Server library sizes in bytes.                     |
-| `plex_library_items_total`  | gauge  | Plex Media Server library items count per section.            |
-| `plex_sessions_total`       | gauge  | Plex Media Server current user sessions.                      |
-| `plex_media_quality_total`  | gauge  | Plex Media Server qualities by resolution.                    |
-| `plex_watch_history_total`  | gauge  | Plex Media Server watch history per user                      |
+| Metric name                          | Type   | Description                                                   | 
+| ------------------------------------ | -------| ------------------------------------------------------------- |
+| `plex_info`                          | info   | Base information about the plex media server host.            |
+| `plex_clients_total`                 | gauge  | Plex Media Server clients.                                    |
+| `plex_genres_total`                  | gauge  | Plex Media Server total genres for all Movies & TV Shows.     |
+| `plex_library_size_total`            | gauge  | Plex Media Server library sizes in bytes.                     |
+| `plex_library_items_total`           | gauge  | Plex Media Server library items count per section.            |
+| `plex_sessions_total`                | gauge  | Plex Media Server current user sessions.                      |
+| `plex_media_quality_total`           | gauge  | Plex Media Server qualities by resolution.                    |
+| `plex_total_played_duration`         | gauge  | Plex Media Server watch history per user                      |
 
 Below is an example scrape job
 
@@ -74,6 +74,6 @@ Below is an example scrape job
         - targets: ['<IPADDRESS/HOSTNAME>:9922']
   ```
 ## Grafana
-Example Grafana dashboard
+Example Grafana dashboard can be found under the grafana [folder](https://github.com/ajalewis/plex-media-server-exporter/tree/main/grafana).
 
 ![grafana-example](grafana/grafana-example.png)
