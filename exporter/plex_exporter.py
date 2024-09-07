@@ -23,7 +23,7 @@ class PlexExporter:
             token (str): The relevant Plex token.
     """
 
-    __version__ = "v1.5.0"
+    __version__ = "v1.6.0"
 
     def __init__(self, token, server, port):
         self.token = token
@@ -91,6 +91,7 @@ class PlexCollector:
             "Total number of current sessions",
             labelnames=[
                 "session_id",
+                "session_type",
                 "username",
                 "title",
                 "player",
@@ -133,12 +134,18 @@ class PlexCollector:
                 else:
                     title = session.title
 
+                if session.transcodeSessions:
+                    session_type = "transcode"
+                else:
+                    session_type = "direct"
+
                 session_key = str(session.sessionKey)
                 username = session.usernames[0]
                 client = session.player
 
                 self.plex_session_metric.labels(
                     session_key,
+                    session_type,
                     username,
                     title,
                     session.player.product,

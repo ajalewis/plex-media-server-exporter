@@ -1,4 +1,4 @@
-FROM python:3.12.0-alpine3.18
+FROM python:3.12.5-alpine3.20
 
 LABEL \
 org.opencontainers.image.authors="alexanderashworthlewis@gmail.com" \
@@ -19,7 +19,8 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 USER exporter:exporter
 
-ENV METRICS_PORT=9922
+#Specify Port here
+ENV METRICS_PORT=9922 
 
 EXPOSE ${PORT}
 
