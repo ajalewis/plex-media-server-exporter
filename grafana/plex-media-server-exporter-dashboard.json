@@ -74,7 +74,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_VICTORIAMETRICS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -159,7 +159,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_VICTORIAMETRICS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(plex_sessions_total{server=\"$plex_server\"}) by (session_type, username, player, title, state)",
@@ -175,7 +175,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_VICTORIAMETRICS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -225,7 +225,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_VICTORIAMETRICS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(plex_genres_total{server=\"$plex_server\"}) by (genre)",
@@ -241,7 +241,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_VICTORIAMETRICS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -295,7 +295,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_VICTORIAMETRICS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "plex_info{name=\"$plex_server\"}",
@@ -311,7 +311,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_VICTORIAMETRICS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -361,7 +361,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_VICTORIAMETRICS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(plex_clients_total{}) by (player, product)",
@@ -377,7 +377,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_VICTORIAMETRICS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -471,7 +471,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_VICTORIAMETRICS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -489,7 +489,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_VICTORIAMETRICS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -544,7 +544,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_VICTORIAMETRICS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(plex_library_items_total{server=\"$plex_server\"}) by (name)",
@@ -560,7 +560,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_VICTORIAMETRICS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -615,7 +615,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_VICTORIAMETRICS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(plex_media_quality_total{server=\"$plex_server\",type=\"movie\"}) by (quality)",
@@ -631,7 +631,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_VICTORIAMETRICS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -644,7 +644,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -685,7 +686,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_VICTORIAMETRICS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(plex_library_size_total{server=\"$plex_server\"}) by (name)",
@@ -701,7 +702,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_VICTORIAMETRICS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -714,7 +715,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -755,7 +757,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_VICTORIAMETRICS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(plex_media_quality_total{server=\"$plex_server\",type=\"episode\"}) by (quality)",
@@ -779,7 +781,7 @@
         "hide": 0,
         "includeAll": false,
         "multi": false,
-        "name": "query0",
+        "name": "datasource",
         "options": [],
         "query": "prometheus",
         "queryValue": "",
@@ -822,6 +824,6 @@
   "timezone": "",
   "title": "Plex Media Server",
   "uid": "f191ca8c-b80a-4671-b8c0-eeee72c50892",
-  "version": 46,
+  "version": 49,
   "weekStart": ""
 }
