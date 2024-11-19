@@ -19,8 +19,8 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 USER exporter:exporter
 
-#Specify Port here
-ENV METRICS_PORT=9922 
+#Specify Port
+ENV METRICS_PORT=9922
 
 EXPOSE ${PORT}
 
