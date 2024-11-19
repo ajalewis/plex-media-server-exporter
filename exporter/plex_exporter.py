@@ -23,7 +23,7 @@ class PlexExporter:
             token (str): The relevant Plex token.
     """
 
-    __version__ = "v1.6.0"
+    __version__ = "v2.0.0"
 
     def __init__(self, token, server, port):
         self.token = token
@@ -56,7 +56,6 @@ class PlexExporter:
             self.collector._collect_libraries_genres()
             self.collector._collect_clients()
             self.collector._collect_total_played()
-            self.collector._collect_qualities()
             time.sleep(15)
 
 
@@ -81,11 +80,6 @@ class PlexCollector:
             "Total items in a library",
             labelnames=["name", "server", "type"],
         )
-        self.plex_genres_metric = Gauge(
-            "plex_genres_total",
-            "Total genres for all media items",
-            labelnames=["genre", "server"],
-        )
         self.plex_session_metric = Gauge(
             "plex_sessions_total",
             "Total number of current sessions",
@@ -100,11 +94,6 @@ class PlexCollector:
                 "server",
             ],
         )
-        self.plex_media_quality_metric = Gauge(
-            "plex_media_quality_total",
-            "Total number of media by quality",
-            labelnames=["type", "quality", "server"],
-        )
         self.plex_total_played_duration_metric = Gauge(
             "plex_total_played_duration",
             "Total number of media played in milliseconds",
@@ -116,8 +105,9 @@ class PlexCollector:
             {
                 "version": f"{self.plex.version}",
                 "name": f"{self.plex.friendlyName}",
-                "host_platform": f"{self.plex.platform}",
-                "plexpass_subscription": f"{self.plex.myPlexSubscription}",
+                "platform": f"{self.plex.platform}",
+                "platform_version": f"{self.plex.platformVersion}",
+                "my_plex_subscription": f"{self.plex.myPlexSubscription}",
             }
         )
 
@@ -128,99 +118,46 @@ class PlexCollector:
         unique_clients = set()
 
         try:
-            for session in sessions:
-                if type(session).__name__ == "EpisodeSession":
-                    title = f"{session.grandparentTitle} - {session.title}"
-                else:
-                    title = session.title
+            if sessions:
+                for session in sessions:
+                    if type(session).__name__ == "EpisodeSession":
+                        title = f"{session.grandparentTitle} - {session.title}"
+                    else:
+                        title = session.title
 
-                if session.transcodeSessions:
-                    session_type = "transcode"
-                else:
-                    session_type = "direct"
+                    if session.transcodeSessions:
+                        session_type = "transcode"
+                    else:
+                        session_type = "direct"
 
-                session_key = str(session.sessionKey)
-                username = session.usernames[0]
-                client = session.player
+                    session_key = str(session.sessionKey)
+                    username = session.usernames[0]
+                    client = session.player
 
-                self.plex_session_metric.labels(
-                    session_key,
-                    session_type,
-                    username,
-                    title,
-                    session.player.product,
-                    session.player.state,
-                    session.sessions[0].location,
-                    self.plex.friendlyName,
-                ).set(1.0)
-
-                if client.machineIdentifier not in unique_clients:
-                    self.plex_client_metric.labels(
-                        client.device, client.product, client.platform
+                    self.plex_session_metric.labels(
+                        session_key,
+                        session_type,
+                        username,
+                        title,
+                        session.player.product,
+                        session.player.state,
+                        session.sessions[0].location,
+                        self.plex.friendlyName,
                     ).set(1.0)
 
-                    unique_clients.add(client.machineIdentifier)
+                    if client.machineIdentifier not in unique_clients:
+                        self.plex_client_metric.labels(
+                            client.device, client.product, client.platform
+                        ).set(1.0)
+
+                        unique_clients.add(client.machineIdentifier)
         except Exception as e:
             logging.warning(f"Failed to scrape plex_clients_metric: {e}")
-
-    def _collect_qualities(self):
-        self.plex_media_quality_metric.clear()
-
-        payload = []
-        medias = self.plex.library.sections()
-        try:
-            for media in medias:
-                if media.TYPE == "movie":
-                    for movie in self.plex.library.sectionByID(media.key).all():
-                        media = movie.media[0] if movie.media else None
-                        video_resolution = (
-                            media.videoResolution
-                            if media.videoResolution
-                            else "undefined"
-                        )  # Deals with Media not having videoResolution
-                        payload.append(
-                            {"type": movie.TYPE, "resolution": video_resolution}
-                        )
-                else:
-                    for show in self.plex.library.sectionByID(media.key).all():
-                        for episode in show.episodes():
-                            media = episode.media[0] if episode.media else None
-                            video_resolution = (
-                                media.videoResolution
-                                if media.videoResolution
-                                else "undefined"
-                            )  # Deals with Media not having videoResolution
-                            payload.append(
-                                {"type": episode.TYPE, "resolution": video_resolution}
-                            )
-
-                    payload = Counter(
-                        (item["type"], item["resolution"]) for item in payload
-                    )
-                    for quality, count in payload.items():
-                        self.plex_media_quality_metric.labels(
-                            quality[0], quality[1], self.plex.friendlyName
-                        ).set(count)
-        except Exception as e:
-            logging.warning(f"Failed to scrape plex_media_quality_metric: {e}")
 
     def _collect_libraries_genres(self):
         libraries = self.plex.library.sections()
 
         try:
-            genres_lists = []
-            for section in libraries:
-                if section.TYPE == "show" or "movie":
-                    media = section.all()
-                    for media in media:
-                        for genre in media.genres:
-                            genres_lists.append(genre.tag)
-            genre_count = Counter(genres_lists)
-            genres = dict(genre_count)
-
-            for genre, count in genres.items():
-                self.plex_genres_metric.labels(genre, self.plex.friendlyName).set(count)
-
             for section in libraries:
                 if section.TYPE == "show":
                     episodes_total_size = len(section.searchEpisodes())
@@ -234,7 +171,7 @@ class PlexCollector:
                     ).set(section.totalSize)
 
                     self.plex_library_items_metric.labels(
-                        "Episodes", self.plex.friendlyName, section.type
+                        "Episodes", self.plex.friendlyName, "episode"
                     ).set(episodes_total_size)
 
                 else:
@@ -277,9 +214,7 @@ class PlexCollector:
                     ).set(float(duration))
 
             except Exception as e:
-                logging.warning(
-                    f"Failed to scrape plex_total_played_duration_metric: {e}"
-                )
+                logging.warning(f"Failed to scrape plex_total_played_duration_metric: {e}")
 
     def _get_users(self):
         users = self.plex.systemAccounts()
