@@ -8,7 +8,6 @@ import logging
 import argparse
 from time import sleep
 from exporter.plex_exporter import PlexExporter
-from dotenv import load_dotenv
 
 logging.basicConfig(
     level="INFO",
@@ -17,7 +16,6 @@ logging.basicConfig(
 )
 
 if __name__ == "__main__":
-    load_dotenv()
 
     parser = argparse.ArgumentParser(
         description="Plex Media Server Prometheus exporter",
@@ -57,8 +55,6 @@ if __name__ == "__main__":
     except ValueError as e:
         logging.error({e})
         exit(1)
-    except AttributeError as e:
-        pass
 
     while True:
         try:
