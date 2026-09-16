@@ -23,7 +23,7 @@ class PlexExporter:
             token (str): The relevant Plex token.
     """
 
-    __version__ = "v3.0.0"
+    __version__ = "v3.1.0"
 
     FAST_INTERVAL = 15
     SLOW_INTERVAL = 300
@@ -45,7 +45,7 @@ class PlexExporter:
             exit(1)
         except ConnectionError:
             logging.error(f"failed to initialise. PMS '{self.server}' is unreachable")
-            exit(1)
+            raise
         except Exception as e:
             logging.error(f"failed to initialise PMS connection: {e}")
             exit(1)
@@ -57,7 +57,10 @@ class PlexExporter:
         last_slow_run = 0
 
         while True:
-            self.collector._collect_clients()
+            try:
+                self.collector._collect_clients()
+            except Exception as e:
+                logging.warning(f"Failed to run fast-tier collector: {e}")
 
             now = time.time()
             if now - last_slow_run >= self.SLOW_INTERVAL:
@@ -73,6 +76,8 @@ class PlexExporter:
 
 
 class PlexCollector:
+    UPDATE_CHECK_INTERVAL = 3600
+
     def __init__(self, token, server) -> None:
         super().__init__()
         self.plex = PlexServer(server, token)
@@ -116,8 +121,12 @@ class PlexCollector:
         self._user_totals = {}
         self._last_history_check = None
         self._cached_users = {}
+        self._last_update_check = 0
+        self._cached_release = ("unknown", "")
 
     def _collect_base(self):
+        update_available, update_version = self._check_for_update()
+
         self.plex_base_metric.info(
             {
                 "version": f"{self.plex.version}",
@@ -125,51 +134,78 @@ class PlexCollector:
                 "platform": f"{self.plex.platform}",
                 "platform_version": f"{self.plex.platformVersion}",
                 "my_plex_subscription": f"{self.plex.myPlexSubscription}",
+                "update_available": update_available,
+                "update_version": update_version,
             }
         )
 
+    def _check_for_update(self):
+        now = time.time()
+        if now - self._last_update_check < self.UPDATE_CHECK_INTERVAL:
+            return self._cached_release
+
+        try:
+            release = self.plex.checkForUpdate(force=True)
+            if release:
+                self._cached_release = ("true", release.version or "")
+            else:
+                self._cached_release = ("false", "")
+        except Exception as e:
+            logging.warning(f"Failed to check for a Plex Media Server update: {e}")
+            self._cached_release = ("unknown", "")
+
+        self._last_update_check = now
+        return self._cached_release
+
     def _collect_clients(self):
-        sessions = self.plex.sessions()
+        try:
+            sessions = self.plex.sessions()
+        except Exception as e:
+            logging.warning(f"Failed to scrape plex_clients_metric: {e}")
+            return
+
         self.plex_session_metric.clear()
 
         unique_clients = set()
 
-        try:
-            if sessions:
-                for session in sessions:
-                    if type(session).__name__ == "EpisodeSession":
-                        title = f"{session.grandparentTitle} - {session.title}"
-                    else:
-                        title = session.title
+        for session in sessions:
+            try:
+                if type(session).__name__ == "EpisodeSession":
+                    title = f"{session.grandparentTitle} - {session.title}"
+                else:
+                    title = session.title
 
-                    if session.transcodeSessions:
-                        session_type = "transcode"
-                    else:
-                        session_type = "direct"
+                if session.transcodeSessions:
+                    session_type = "transcode"
+                else:
+                    session_type = "direct"
 
-                    session_key = str(session.sessionKey)
-                    username = session.usernames[0]
-                    client = session.player
+                session_key = str(session.sessionKey)
+                username = session.usernames[0] if session.usernames else "unknown"
+                location = (
+                    session.sessions[0].location if session.sessions else "unknown"
+                )
+                client = session.player
 
-                    self.plex_session_metric.labels(
-                        session_key,
-                        session_type,
-                        username,
-                        title,
-                        session.player.product,
-                        session.player.state,
-                        session.sessions[0].location,
-                        self.plex.friendlyName,
+                self.plex_session_metric.labels(
+                    session_key,
+                    session_type,
+                    username,
+                    title,
+                    client.product,
+                    client.state,
+                    location,
+                    self.plex.friendlyName,
+                ).set(1.0)
+
+                if client.machineIdentifier not in unique_clients:
+                    self.plex_client_metric.labels(
+                        client.device, client.product, client.platform
                     ).set(1.0)
 
-                    if client.machineIdentifier not in unique_clients:
-                        self.plex_client_metric.labels(
-                            client.device, client.product, client.platform
-                        ).set(1.0)
-
-                        unique_clients.add(client.machineIdentifier)
-        except Exception as e:
-            logging.warning(f"Failed to scrape plex_clients_metric: {e}")
+                    unique_clients.add(client.machineIdentifier)
+            except Exception as e:
+                logging.warning(f"Failed to scrape plex_clients_metric: {e}")
 
     def _collect_libraries_genres(self):
         libraries = self.plex.library.sections()
