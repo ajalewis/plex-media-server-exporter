@@ -3,10 +3,22 @@
   "kind": "Dashboard",
   "metadata": {
     "name": "f191ca8c-b80a-4671-b8c0-eeee72c50892",
-    "generation": 66,
+    "namespace": "default",
+    "uid": "6SpYjdmzmgJVujRQlE1FgZ2XwuvKDXQIQUn6hjkqKaIX",
+    "resourceVersion": "1789559263470975",
+    "generation": 68,
     "creationTimestamp": "2024-01-03T21:14:31Z",
-    "labels": {},
-    "annotations": {}
+    "labels": {
+      "grafana.app/deprecatedInternalID": "13"
+    },
+    "annotations": {
+      "grafana.app/folder": "fd5c642f-1a4b-4708-94a2-22d19f2ac9ae",
+      "grafana.app/saved-from-ui": "Grafana v13.1.1 (e784b7782a)",
+      "grafana.app/updatedBy": "user:bfm8v1vs4hmgwc",
+      "grafana.app/updatedTimestamp": "2026-09-16T11:47:43Z",
+      "grafana.app/folderTitle": "Apps",
+      "grafana.app/folderUrl": "/dashboards/f/fd5c642f-1a4b-4708-94a2-22d19f2ac9ae/apps"
+    }
   },
   "spec": {
     "annotations": [
@@ -17,10 +29,10 @@
             "kind": "DataQuery",
             "group": "grafana",
             "version": "v0",
-            "spec": {},
-            "labels": {
-              "grafana.app/export-label": "grafana-1"
-            }
+            "datasource": {
+              "name": "-- Grafana --"
+            },
+            "spec": {}
           },
           "enable": true,
           "hide": true,
@@ -74,7 +86,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.1.0",
+            "version": "13.1.1",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -161,7 +173,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.1.0",
+            "version": "13.1.1",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -200,6 +212,101 @@
                   }
                 },
                 "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-14": {
+        "kind": "Panel",
+        "spec": {
+          "id": 14,
+          "title": "Upgrade Available",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "plex_info{name=\"$plex_server\"}",
+                        "instant": false,
+                        "legendFormat": "{{update_available}}",
+                        "range": true
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.1.1",
+            "spec": {
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "name",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "scope": "series",
+                      "options": "false"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "No"
+                      }
+                    ]
+                  }
+                ]
               }
             }
           }
@@ -246,7 +353,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.1.0",
+            "version": "13.1.1",
             "spec": {
               "options": {
                 "annotations": {
@@ -372,7 +479,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "piechart",
-            "version": "13.1.0",
+            "version": "13.1.1",
             "spec": {
               "options": {
                 "displayLabels": [],
@@ -458,7 +565,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.1.0",
+            "version": "13.1.1",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -544,7 +651,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.1.0",
+            "version": "13.1.1",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -600,7 +707,7 @@
               "x": 0,
               "y": 0,
               "width": 14,
-              "height": 6,
+              "height": 7,
               "element": {
                 "kind": "ElementReference",
                 "name": "panel-2"
@@ -612,8 +719,8 @@
             "spec": {
               "x": 14,
               "y": 0,
-              "width": 6,
-              "height": 6,
+              "width": 5,
+              "height": 7,
               "element": {
                 "kind": "ElementReference",
                 "name": "panel-4"
@@ -623,10 +730,10 @@
           {
             "kind": "GridLayoutItem",
             "spec": {
-              "x": 20,
+              "x": 19,
               "y": 0,
-              "width": 4,
-              "height": 6,
+              "width": 5,
+              "height": 4,
               "element": {
                 "kind": "ElementReference",
                 "name": "panel-1"
@@ -636,8 +743,21 @@
           {
             "kind": "GridLayoutItem",
             "spec": {
+              "x": 19,
+              "y": 4,
+              "width": 5,
+              "height": 3,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-14"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
               "x": 0,
-              "y": 6,
+              "y": 7,
               "width": 7,
               "height": 6,
               "element": {
@@ -650,7 +770,7 @@
             "kind": "GridLayoutItem",
             "spec": {
               "x": 7,
-              "y": 6,
+              "y": 7,
               "width": 8,
               "height": 6,
               "element": {
@@ -663,7 +783,7 @@
             "kind": "GridLayoutItem",
             "spec": {
               "x": 15,
-              "y": 6,
+              "y": 7,
               "width": 9,
               "height": 6,
               "element": {
@@ -709,8 +829,8 @@
           "refresh": "onDashboardLoad",
           "regex": "",
           "current": {
-            "text": "",
-            "value": ""
+            "text": "default",
+            "value": "default"
           },
           "options": [],
           "multi": false,
@@ -725,8 +845,8 @@
         "spec": {
           "name": "plex_server",
           "current": {
-            "text": "",
-            "value": ""
+            "text": "hub.ashworthhome.io",
+            "value": "hub.ashworthhome.io"
           },
           "label": "Plex Server",
           "hide": "dontHide",
@@ -736,14 +856,13 @@
             "kind": "DataQuery",
             "group": "prometheus",
             "version": "v0",
+            "datasource": {
+              "name": "PABDA7AB1AD2A1489"
+            },
             "spec": {
               "qryType": 1,
               "query": "label_values({__name__=~\"plex_.*\"},server)",
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
-            },
-            "labels": {
-              "grafana.app/export-label": "prometheus-1",
-              "grafana.app/export-datasource-name": "victoriametrics"
             }
           },
           "regex": "",
@@ -761,8 +880,10 @@
         "spec": {
           "name": "user",
           "current": {
-            "text": "",
-            "value": ""
+            "text": "All",
+            "value": [
+              "$__all"
+            ]
           },
           "hide": "dontHide",
           "refresh": "onDashboardLoad",
@@ -771,14 +892,13 @@
             "kind": "DataQuery",
             "group": "prometheus",
             "version": "v0",
+            "datasource": {
+              "name": "PABDA7AB1AD2A1489"
+            },
             "spec": {
               "qryType": 1,
               "query": "label_values(user)",
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
-            },
-            "labels": {
-              "grafana.app/export-label": "prometheus-1",
-              "grafana.app/export-datasource-name": "victoriametrics"
             }
           },
           "regex": "",
